@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType
+from textnode import TextNode, TextType, text_node_to_html_node
 
 
 class TestTextNode(unittest.TestCase):
@@ -29,6 +29,11 @@ class TestTextNode(unittest.TestCase):
         node = TextNode("This is a text node", TextType.ITALIC, url="google.com")
         node2 = TextNode("This is a text node", TextType.BOLD, url="google.com")
         self.assertNotEqual(node, node2)
+
+  
+   
+
+
 
     
 

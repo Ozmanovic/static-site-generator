@@ -35,11 +35,21 @@ class LeafNode(HTMLNode):
             return html_string
 class ParentNode(HTMLNode):
     def __init__(self, tag, children, props=None):
-        super().__init__(tag, children, props=props)
+        super().__init__(tag, value=None, props=props)
+        self.children = children
     def to_html(self):
+        empty = []
         if not self.tag:
             raise ValueError("ParentNode must have a non-empty tag.") 
         if not self.children:
             raise ValueError("ParentNode must have a non-empty children.") 
         else:
-            
+            for child in self.children:
+                if not isinstance (child, HTMLNode):
+                    raise ValueError("Child is not a Node Object")
+                else:
+                    empty.append(child.to_html()) 
+        all_children = "".join(empty)
+        final = f"<{self.tag}>{all_children}</{self.tag}>"
+        return final
+
