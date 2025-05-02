@@ -2,13 +2,17 @@ from textnode import TextNode, markdown_to_html_node
 import os
 import shutil
 from htmlnode import HTMLNode
+import sys
 
-
+if len(sys.argv) > 1:
+    basepath = sys.argv[1]
+else:
+    basepath = "/"
 
 
 def main():
-    copy_from_static_to_public()
-    generate_pages_recursive()
+    copy_from_static_to_docs()
+    generate_pages_recursive(basepath)
 
 
 
@@ -16,22 +20,17 @@ def main():
 
 
 
-def copy_from_static_to_public():
-    # Get paths
+def copy_from_static_to_docs():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(current_dir)
-    public_dir = os.path.join(project_root, "public")
+    docs_dir = os.path.join(project_root, "docs")
     static_dir = os.path.join(project_root, "static")
-    
-    # Remove public directory if it exists
-    if os.path.exists(public_dir):
-        shutil.rmtree(public_dir)
-    
-    # Create a fresh public directory
-    os.mkdir(public_dir)
-    
-    # Recursively copy contents from static to public
-    copy_directory_recursive(static_dir, public_dir)
+
+    if os.path.exists(docs_dir):
+        shutil.rmtree(docs_dir)
+
+    os.mkdir(docs_dir)
+    copy_directory_recursive(static_dir, docs_dir)
 
 def copy_directory_recursive(source, destination):
     # Create destination directory if it doesn't exist
@@ -64,7 +63,7 @@ def extract_title(markdown):
             return line[2:].strip()
     raise Exception("No H1 header found")
         
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
 
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
@@ -78,6 +77,7 @@ def generate_page(from_path, template_path, dest_path):
     
     title_from = extract_title(f_path)
     result = t_path.replace("{{ Title }}", title_from).replace("{{ Content }}", html_string)
+    result = result.replace('href="/', f'href="{basepath}').replace('src="/', f'src="{basepath}')
 
     dir_path = os.path.dirname(dest_path)
 
@@ -95,11 +95,11 @@ def find_md_files(search_path="content"):
     return matches
 
 
-def generate_pages_recursive():
+def generate_pages_recursive(basepath):
     all_paths = find_md_files()
     for path in all_paths:
-        dest_path = path.replace("content", "public").replace(".md", ".html")
-        generate_page(path, "template.html", dest_path)
+        dest_path = path.replace("content", "docs").replace(".md", ".html")
+        generate_page(path, "template.html", dest_path, basepath)
 
 
 
