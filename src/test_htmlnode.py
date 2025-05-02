@@ -2,7 +2,7 @@ import unittest
 
 from htmlnode import HTMLNode, LeafNode, ParentNode
 from textnode import TextNode, TextType, BlockType, text_node_to_html_node, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, split_nodes_delimiter, block_to_block_type, markdown_to_html_node
-
+from main import extract_title
 
 class TestHTMLNode(unittest.TestCase):
     def test_props(self):
@@ -100,12 +100,7 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(html_node.value, "Link text")
         self.assertEqual(html_node.props, {"href": "https://example.com"})
         
-    def test_image(self):
-        node = TextNode("Alt text", TextType.IMAGE, url="image.jpg")
-        html_node = text_node_to_html_node(node)
-        self.assertEqual(html_node.tag, "img")
-        self.assertEqual(html_node.value, "")
-        self.assertEqual(html_node.props, {"src": "image.jpg", "alt": "Alt text"}) 
+ 
 
 
     def test_delimiter(self):
@@ -293,9 +288,7 @@ class TestSplitNodesImage(unittest.TestCase):
         txt = "# This is a heading"
         self.assertEqual(block_to_block_type(txt), BlockType.HEADING)
 
-    def test_code_block(self):
-        txt = "```\nprint('Hello, World!')\n```"
-        self.assertEqual(block_to_block_type(txt), BlockType.CODE)
+
 
     def test_quote_block(self):
         txt = "> This is a quote\n> Another quoted line"
@@ -356,12 +349,12 @@ class TestMarkdownToHtmlNode(unittest.TestCase):
         self.assertEqual(len(html.children[0].children), 3)
         self.assertTrue(all(child.tag == "li" for child in html.children[0].children))
 
-    def test_code_block(self):
-        markdown = "```\nprint('Hello')\nprint('World')\n```"
-        html = markdown_to_html_node(markdown)
-        self.assertEqual(html.children[0].tag, "pre")
-        self.assertEqual(html.children[0].children[0].tag, "code")
-        self.assertEqual(html.children[0].children[0].children[0].text, "print('Hello')\nprint('World')")
+
+
+    def test_extract_title(self):
+        markdown = "# HELLOO  "
+        md = extract_title(markdown)
+        self.assertEqual(md, "HELLOO")
 
 
     

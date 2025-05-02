@@ -1,5 +1,5 @@
 from enum import Enum
-from htmlnode import LeafNode, HTMLNode
+from htmlnode import LeafNode, HTMLNode, ParentNode
 
 import re
 
@@ -52,7 +52,7 @@ def text_node_to_html_node(text_node):
                 "src": text_node.url,
                 "alt": text_node.text
             }
-            return LeafNode(tag="img", value="", props=image_props)
+            return LeafNode(tag="img", value=" ", props=image_props)
         elif text_node.text_type == TextType.BLOCK_QUOTE:
             return LeafNode(tag="blockquote", value=text_node.text)
         else:
@@ -264,10 +264,12 @@ def markdown_to_html_node(markdown):
         block_type = block_to_block_type(block)
         if block_type == BlockType.PARAGRAPH:
             children = text_to_textnode_to_htmlnode(block)
-            html_list.append(HTMLNode(tag="p", children=children, props={}))
+            html_list.append(ParentNode(tag="p", children=children, props={}))
         elif block_type == BlockType.QUOTE:
-            children = text_to_textnode_to_htmlnode(block)
-            html_list.append(HTMLNode(tag="blockquote", children=children, props={}))
+            # Remove the '>' characters from the beginning of each line
+            cleaned_block = "\n".join(line.lstrip("> ") for line in block.split("\n"))
+            children = text_to_textnode_to_htmlnode(cleaned_block)
+            html_list.append(ParentNode(tag="blockquote", children=children, props={}))
         elif block_type == BlockType.UNORDERED_LIST:
             children = []
             splitted_list = block.split("\n")
@@ -275,13 +277,13 @@ def markdown_to_html_node(markdown):
                 if line.startswith("- "):
                     content = line[2:].strip()
                     processed = text_to_textnode_to_htmlnode(content)
-                    children.append(HTMLNode(tag="li", children=processed))
+                    children.append(ParentNode(tag="li", children=processed))
                 else:
                     continue
         
 
             
-            html_list.append(HTMLNode(tag="ul", children=children, props={}))
+            html_list.append(ParentNode(tag="ul", children=children, props={}))
         elif block_type == BlockType.ORDERED_LIST:
             children = []
             splitted_list = block.split("\n")
@@ -290,11 +292,11 @@ def markdown_to_html_node(markdown):
                 if re.match(r"^\d+\.\s", line):
                     content = re.sub(r"^\d+\.\s", "", line)
                     processed = text_to_textnode_to_htmlnode(content)
-                    children.append(HTMLNode(tag="li", children=processed))
+                    children.append(ParentNode(tag="li", children=processed))
                 else:
                     continue
             
-            html_list.append(HTMLNode(tag="ol", children=children, props={}))
+            html_list.append(ParentNode(tag="ol", children=children, props={}))
         elif block_type == BlockType.HEADING:
             # Count the hashtags
             match = re.match(r'^(#+)\s', block)
@@ -303,18 +305,20 @@ def markdown_to_html_node(markdown):
                 # Remove the hashtags and space
                 content = re.sub(r'^#+\s', '', block)
                 children = text_to_textnode_to_htmlnode(content)
-                html_list.append(HTMLNode(tag=f"h{level}", children=children, props={}))
+                html_list.append(ParentNode(tag=f"h{level}", children=children, props={}))
         elif block_type == BlockType.CODE:
             # Strip leading/trailing whitespace and remove the triple backticks
             lines = block.split("\n")
             # Skip the first and last line (which contain ```)
             code_content = "\n".join(lines[1:-1])
             # Create a text node without processing markdown
-            html_node = HTMLNode(tag="code", children=[TextNode(code_content, TextType.TEXT, None)], props={})
-            pre_node = HTMLNode(tag="pre", children=[html_node], props={})
+            text_node = TextNode(code_content, TextType.TEXT, None)
+            leaf_node = text_node_to_html_node(text_node)
+            html_node = ParentNode(tag="code", children=[leaf_node], props={})
+            pre_node = ParentNode(tag="pre", children=[html_node], props={})
             html_list.append(pre_node)
         
-    return HTMLNode(tag="div", children=html_list)    
+    return ParentNode(tag="div", children=html_list)    
 
 def text_to_textnode_to_htmlnode(text):
     html_nodes = []
